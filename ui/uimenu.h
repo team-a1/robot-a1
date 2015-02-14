@@ -1,7 +1,8 @@
 // UI Menu library for testing
 // Creates a UI menu with choices to select different functions
-// Supports up to 4 programs
-// USE ui() to create a ui fast.
+// Supports up to 5 programs
+// USE choice=ui() to create a ui fast.
+// Returns choice as an interger
 // Vinh Peters
 
 #ifndef uimenu_H
@@ -130,13 +131,19 @@ void dispopt(int n)
     {
         LCD.Write("<Program 4>");
     }
+    else if (n==4)
+    {
+        LCD.Write("<Program 5>");
+    }
 }
 
 
 //UI Function
 // Uses all above functions
 // Use this function
-int ui(void)
+// Remeber that this returns the selected choice number
+// 0 is choice 1
+int ui(void) // c=ui();
 {
 
     splash();
@@ -160,7 +167,7 @@ int ui(void)
 
 
     temp = c;
-    c = options(c,4);
+    c = options(c,5);
 
     /* Determine if a choice was made */
     if (c == temp)
@@ -181,26 +188,36 @@ int ui(void)
         LCD.WriteLine("");
 LCD.WriteLine("Running...");
 Sleep(500);
+break;
     }
     else if (c == 1)
     {
         LCD.WriteLine("");
 LCD.WriteLine("Running...");
 Sleep(500);
+break;
     }
     else if (c == 2)
     {
         LCD.WriteLine("");
 LCD.WriteLine("Running...");
 Sleep(500);
+break;
     }
     else if (c == 3)
     {
         LCD.WriteLine("");
 LCD.WriteLine("Running...");
 Sleep(500);
+break;
     }
-
+    else if (c == 4)
+    {
+        LCD.WriteLine("");
+  LCD.WriteLine("Running...");
+  Sleep(500);
+  break;
+    }
     }
 
  return c;
