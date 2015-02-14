@@ -135,15 +135,37 @@ void dispopt(int n)
     {
         LCD.Write("<Program 5>");
     }
+    else if (n==5)
+    {
+        LCD.Write("<Program 6>");
+    }
+    else if (n==6)
+    {
+        LCD.Write("<Program 7>");
+    }
+    else if (n==7)
+    {
+        LCD.Write("<Program 8>");
+    }
+    else if (n==8)
+    {
+        LCD.Write("<Program 9>");
+    }
+    else if (n==9)
+    {
+        LCD.Write("<Program 10>");
+    }
 }
 
 
 //UI Function
 // Uses all above functions
 // Use this function
-// Remeber that this returns the selected choice number
+// Remember that this returns the selected choice number
 // 0 is choice 1
-int ui(void) // c=ui();
+// Takes the number of options
+
+int ui(int n) // c=ui(number of options);
 {
 
     splash();
@@ -161,13 +183,10 @@ int ui(void) // c=ui();
     {
 
     menu();
-
     dispopt(c);
-
-
-
+	
     temp = c;
-    c = options(c,5);
+    c = options(c,n);
 
     /* Determine if a choice was made */
     if (c == temp)
@@ -175,51 +194,18 @@ int ui(void) // c=ui();
         /* Set counter to exit main menu loop */
        j=1;
     }
-
-
     }
-
 
 // Option executes
 // Returns c to be used in another if-else to determine which
 // program to run
-    if (c == 0)
-    {
-        LCD.WriteLine("");
-LCD.WriteLine("Running...");
-Sleep(500);
-break;
-    }
-    else if (c == 1)
-    {
-        LCD.WriteLine("");
-LCD.WriteLine("Running...");
-Sleep(500);
-break;
-    }
-    else if (c == 2)
-    {
-        LCD.WriteLine("");
-LCD.WriteLine("Running...");
-Sleep(500);
-break;
-    }
-    else if (c == 3)
-    {
-        LCD.WriteLine("");
-LCD.WriteLine("Running...");
-Sleep(500);
-break;
-    }
-    else if (c == 4)
-    {
-        LCD.WriteLine("");
-  LCD.WriteLine("Running...");
-  Sleep(500);
-  break;
-    }
-    }
 
+LCD.WriteLine("");
+LCD.WriteLine("Running...");
+Sleep(500);
+LCD.Clear(FEHLCD::Black);
+break;
+    }
  return c;
 }
 
