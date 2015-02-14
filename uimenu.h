@@ -1,0 +1,211 @@
+// UI Menu library for testing
+// Creates a UI menu with choices to select different functions
+// Supports up to 4 programs
+// USE ui() to create a ui fast.
+// Vinh Peters
+
+#ifndef uimenu_H
+#define uimenu_H
+
+#include "FEHLCD.h"
+#include "FEHUtility.h"
+#include "FEHBuzzer.h"
+
+// Team A1 splash screen
+// I have no life
+void splash(void)
+{
+    LCD.Clear(FEHLCD::Black);
+    LCD.SetFontColor(FEHLCD::White);
+
+    LCD.WriteLine(" ");
+    LCD.WriteLine(" ");
+
+LCD.WriteLine(" ##### #####   #   #   #");
+LCD.WriteLine("   #   #      # #  ## ##");
+LCD.WriteLine("   #   ####  ##### # # #");
+LCD.WriteLine("   #   #     #   # #   #");
+LCD.WriteLine("   #   ##### #   # #   #");
+LCD.WriteLine("          #     #     ");
+LCD.WriteLine("         # #   ##     ");
+LCD.WriteLine("        #####   #     ");
+LCD.WriteLine("        #   #   #     ");
+LCD.WriteLine("        #   #  ###    ");
+
+// Time to see it in all its glory
+Sleep(300);
+//Quindar tone
+Buzzer.Tone(2525,250);
+Sleep(200);
+Buzzer.Tone(2475,250);
+Sleep(300);
+
+// All good things don't last forever
+LCD.Clear(FEHLCD::Black);
+LCD.SetFontColor(FEHLCD::White);
+}
+
+
+//Main menu function
+// Creates menu with instructions and options
+
+void menu(void)
+{
+
+    LCD.Clear(FEHLCD::Black);
+    LCD.WriteLine("Select an option using");
+    LCD.WriteLine("the right and left buttons");
+    LCD.WriteLine(" ");
+    LCD.WriteLine("Press the middle button");
+    LCD.WriteLine("to select an option.");
+    LCD.WriteLine(" ");
+    LCD.WriteLine(" ");
+}
+
+
+
+// Option counter
+int options(int k,int n)
+{
+ ButtonBoard buttons( FEHIO::Bank3 );
+    // Wait for a button press
+    while (!buttons.RightPressed() && !buttons.LeftPressed() && !buttons.MiddlePressed())
+    {
+    }
+// Change counters accordingly
+    if (buttons.RightPressed())
+    {
+     k++;
+
+    }
+    else if (buttons.LeftPressed())
+    {
+
+        k--;
+    }
+    // Prevents pressing too fast
+    Sleep(.15);
+
+if (k==n)
+{
+k=0;
+}
+
+else if (k==-1)
+{
+    k=n-1;
+
+}
+Sleep(.1);
+
+    // Return k, final choice
+    return k;
+
+}
+
+
+
+//Display options
+// These can be modifed to include more descriptive titles,
+//but save to a new header file. More options can also be added
+// Could be made to update from a string array, but the FEH package
+// does not support string operations apparently
+
+void dispopt(int n)
+{
+
+    if (n==0)
+    {
+        LCD.Write("<Program 1>");
+    }
+    else if (n==1)
+    {
+        LCD.Write("<Program 2>");
+    }
+    else if (n==2)
+    {
+        LCD.Write("<Program 3>");
+    }
+    else if (n==3)
+    {
+        LCD.Write("<Program 4>");
+    }
+}
+
+
+//UI Function
+// Uses all above functions
+// Use this function
+int ui(void)
+{
+
+    splash();
+    int c=0,j,temp;
+
+
+
+    //Master while loop
+    // Returns here after selected program runs
+    while (1)
+    {
+        j=0;
+    // Menu while loop
+    while (j==0)
+    {
+
+    menu();
+
+    dispopt(c);
+
+
+
+    temp = c;
+    c = options(c,4);
+
+    /* Determine if a choice was made */
+    if (c == temp)
+    {
+        /* Set counter to exit main menu loop */
+       j=1;
+    }
+
+
+    }
+
+
+// Option executes
+// Returns c to be used in another if-else to determine which
+// program to run
+    if (c == 0)
+    {
+        LCD.WriteLine("");
+LCD.WriteLine("Running...");
+Sleep(500);
+    }
+    else if (c == 1)
+    {
+        LCD.WriteLine("");
+LCD.WriteLine("Running...");
+Sleep(500);
+    }
+    else if (c == 2)
+    {
+        LCD.WriteLine("");
+LCD.WriteLine("Running...");
+Sleep(500);
+    }
+    else if (c == 3)
+    {
+        LCD.WriteLine("");
+LCD.WriteLine("Running...");
+Sleep(500);
+    }
+
+    }
+
+ return c;
+}
+
+
+
+#endif
