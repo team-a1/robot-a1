@@ -212,29 +212,8 @@ void check_heading(float heading) //using RPS
     }
 }
 
-//function when you want to turn relative to RPS location
-//takes desired new location coordinates as parameters
-//should turn robot so that it is facing this location
-float turnRPS(float xc, float yc)
+void SetHeading(float heading)
 {
-    //stores current location of robot
-    float x=RPS.X();
-    float y=RPS.Y();
-    //stores change in x and y
-    float dx=xc-x;
-    float dy=yc-y;
-    //calculates heading (Note: must be converted from radians to degrees)
-    float heading=atan(dy/dx)*(180/PI);
-    //accounts for 0 degrees being north instead of east
-    if (dx>0)
-    { //add 270 to rotate one quadrant CCW
-        heading+=270;
-    }
-    else
-    { //range of atan is only (-PI/2, PI/2), so if you want to be in
-        //quadrants 2 or 3 you add 180 then 270, or just add 90
-        heading+=90;
-    }
     //stores actual rotational distance you want to travel
     float dist;
     //counts to travel that distance
@@ -279,199 +258,82 @@ float turnRPS(float xc, float yc)
     }
     //fine-tuning
     check_heading(heading);
-    return heading;
 }
 
-int main(void)
+//moves robot based on an equation or specified path to an objective
+void move_f(float x, float y, float head, int percent)
 {
-        LCD.Clear();
+    //finds angle relative to horizontal
+    if(head>180)
+    {
+        head=head-270;
+    }
+    else
+    {
+        head=head-90;
+    }
+    //calculates equation of path to objective (y=mx+b)
+    float m = tan(head);
+    float b = y/(x*m);
+    //store current location and orientation of robot
+    float head_now=RPS.Heading();
+    float xc=RPS.X();
+    float yc=RPS.Y();
+    //you are below the path
+    //finds angle to travel perpendicularly to path, shortest distance
+    float head_later=atan((-1)/m);
+    //corrections relavive to RPS system
+    //for negative slopes
+    if(head_later<0)
+    {
+        head_later=360-head_later;
+    }
+    //for positive slopes
+    else
+    {
+        head_later+=270;
+    }
+    if(yc>(m*RPS.X()+b))
+    {
+        head_later-=180;
+    }
+    SetHeading(head_later);
+    right_motor.SetPercent(50);
+    left_motor.SetPercent(50);
+    if(yc>(m*RPS.X()+b))
+    {
+        while(RPS.Y()>(m*RPS.X()+b));
+    }
+    else
+    {
+        while(RPS.Y()<(m*RPS.X()+b));
+    }
+    right_motor.Stop();
+    left_motor.Stop();
+}
 
-        RPS.InitializeMenu();
-        //values from calibration
-        servo.SetMax(2289);
-        servo.SetMin(500);
-        servo.SetDegree(90);
-
-        //sets thresholds for encoders
-        left_encoder.SetThresholds(.5,2.5);
-        right_encoder.SetThresholds(.5,2.5);
-        /*move_time(50,50,2);
-        turn_left(50,11);
-        check_heading(270);
-        move_time(50,50,2);
-        turn_left(50,11);
-        check_heading(0);
-        move_time(60,30,1);
-        move_time(30,60,1);*/
-        move_time(65,65,3);
-        check_y_plus(51);
-
-        //(13,63) = coordinates of area of course directly in front of buttons
-        float button_heading=turnRPS(15.5,59);
-        right_motor.SetPercent(50);
-        left_motor.SetPercent(50);
-
-        //use white button as bump switch
-        float time = TimeNow();
-        while(RPS.ButtonsPressed()<1&&TimeNow()-time<4);
-        right_motor.Stop();
-        left_motor.Stop();
-        if(RPS.ButtonsPressed()<1)
-        {
-            while(RPS.ButtonsPressed()<1)
-            {
-                float y = RPS.Y();
-                //too far left
-                if(y<61.5)
-                {
-                    move_time(-30,-30,1);
-                    turn_right(30,2);
-                    move_time(40,40,1);
-                    right_motor.SetPercent(50);
-                    Sleep(500);
-                    right_motor.Stop();
-                }
-                //too far right
-                else
-                {
-                    move_time(-30,-30,1);
-                    turn_left(30,2);
-                    move_time(40,40,1);
-                    left_motor.SetPercent(50);
-                    Sleep(500);
-                    left_motor.Stop();
-                }
-            }
-        }
-        //now we are in front of the buttons
-        int red = RPS.RedButtonOrder();
-        int blue = RPS.BlueButtonOrder();
-        int white = RPS.WhiteButtonOrder();
-        int red_angle = 30;
-        int blue_angle = 150;
-        int white_angle = 90;
-        int a=1;
-        float b=button_heading;
-        while (a<=3)
-        {
-            //move backwards from wall
-            Sleep(500);
-            move_time(-40,-40,1);
-            //adjust servo to desired angle
-            if (red==a && RPS.RedButtonPressed()!=1)
-            {
-                servo.SetDegree(red_angle);
-                check_heading(b);
-                Sleep(500);
-                move_time(40,40,1);
-                if (RPS.RedButtonPressed()==1)
-                {
-                    a++;
-                }
-                else
-                {
-                    red_angle=red_angle+5;
-                    if(red_angle==40)
-                    {
-                        red_angle=0;
-                    }
-                    if(RPS.Y()>61.5)
-                    {
-                        b+=3;
-                    }
-                    else
-                    {
-                        b-=3;
-                    }
-                    if(b>button_heading+20)
-                    {
-                        b=button_heading-20;
-                    }
-                    else if(b<button_heading-20)
-                    {
-                        b=button_heading+20;
-                    }
-                }
-            }
-            else if (blue==a && RPS.BlueButtonPressed()!=1)
-            {
-                servo.SetDegree(blue_angle);
-                check_heading(b);
-                Sleep(500);
-                move_time(40,40,1);
-                if(RPS.BlueButtonPressed()==1)
-                {
-                    a++;
-                }
-                else
-                {
-                    blue_angle=blue_angle-5;
-                    if(blue_angle==140)
-                    {
-                        blue_angle=180;
-                    }
-                    if(RPS.Y()>61.5)
-                    {
-                        b+=3;
-                    }
-                    else
-                    {
-                        b-=3;
-                    }
-                    if(b>button_heading+20)
-                    {
-                        b=button_heading-20;
-                    }
-                    else if(b<button_heading-20)
-                    {
-                        b=button_heading+20;
-                    }
-                }
-            }
-            else if(white==a && RPS.BlueButtonPressed()!=1)
-            {
-                servo.SetDegree(white_angle);
-                check_heading(b);
-                Sleep(500);
-                move_time(40,40,1);
-                if (RPS.WhiteButtonPressed()==1)
-                {
-                    a++;
-                }
-                else
-                {
-                    white_angle=white_angle+5;
-                    if(white_angle==65)
-                    {
-                        white_angle=25;
-                    }
-                    if(RPS.Y()>61.5)
-                    {
-                        b+=3;
-                    }
-                    else
-                    {
-                        b-=3;
-                    }
-                    if(b>button_heading+20)
-                    {
-                        b=button_heading-20;
-                    }
-                    else if(b<button_heading-20)
-                    {
-                        b=button_heading+20;
-                    }
-                }
-            }
-            if(RPS.ButtonsPressed()==a)
-            {
-                a++;
-            }
-            if(RPS.ButtonsPressed()<a-1)
-            {
-                a=1;
-            }
-        }
-
-    return 0;
+//function when you want to turn relative to RPS location
+//takes desired new location coordinates as parameters
+//and returns the heading towards that location
+float turnRPS(float xc, float yc)
+{
+    //stores current location of robot
+    float x=RPS.X();
+    float y=RPS.Y();
+    //stores change in x and y
+    float dx=xc-x;
+    float dy=yc-y;
+    //calculates heading (Note: must be converted from radians to degrees)
+    float heading=atan(dy/dx)*(180/PI);
+    //accounts for 0 degrees being north instead of east
+    if (dx>0)
+    { //add 270 to rotate one quadrant CCW
+        heading+=270;
+    }
+    else
+    { //range of atan is only (-PI/2, PI/2), so if you want to be in
+        //quadrants 2 or 3 you add 180 then 270, or just add 90
+        heading+=90;
+    }
+    return heading;
 }
