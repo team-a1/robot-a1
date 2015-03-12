@@ -1,8 +1,10 @@
 // UI Menu library for testing
 // Creates a UI menu with choices to select different functions
-// Supports up to 5 programs
+// Includes diagnostics
+// Supports up to 9 programs
 // USE choice=ui() to create a ui fast.
-// Returns choice as an interger
+// Returns choice as an integer
+// 0 is diagnostics
 // Vinh Peters
 
 #ifndef uimenu_H
@@ -11,6 +13,11 @@
 #include "FEHLCD.h"
 #include "FEHUtility.h"
 #include "FEHBuzzer.h"
+#include "FEHLCD.h"
+#include "FEHIO.h"
+#include "FEHMotor.h"
+#include "FEHServo.h"
+#include "diagnostics.h"
 
 // Team A1 splash screen
 // I have no life
@@ -117,43 +124,43 @@ void dispopt(int n)
 
     if (n==0)
     {
-        LCD.Write("<Program 1>");
+        LCD.Write("<Diagnostics>");
     }
     else if (n==1)
     {
-        LCD.Write("<Program 2>");
+        LCD.Write("<Program 1>");
     }
     else if (n==2)
     {
-        LCD.Write("<Program 3>");
+        LCD.Write("<Program 2>");
     }
     else if (n==3)
     {
-        LCD.Write("<Program 4>");
+        LCD.Write("<Program 3>");
     }
     else if (n==4)
     {
-        LCD.Write("<Program 5>");
+        LCD.Write("<Program 4>");
     }
     else if (n==5)
     {
-        LCD.Write("<Program 6>");
+        LCD.Write("<Program 5>");
     }
     else if (n==6)
     {
-        LCD.Write("<Program 7>");
+        LCD.Write("<Program 6>");
     }
     else if (n==7)
     {
-        LCD.Write("<Program 8>");
+        LCD.Write("<Program 7>");
     }
     else if (n==8)
     {
-        LCD.Write("<Program 9>");
+        LCD.Write("<Program 8>");
     }
     else if (n==9)
     {
-        LCD.Write("<Program 10>");
+        LCD.Write("<Program 9>");
     }
 }
 
@@ -162,7 +169,8 @@ void dispopt(int n)
 // Uses all above functions
 // Use this function
 // Remember that this returns the selected choice number
-// 0 is choice 1
+// 0 is diagnotiscs
+// 1 is program 1
 // Takes the number of options
 
 int ui(int n) // c=ui(number of options);
@@ -184,7 +192,7 @@ int ui(int n) // c=ui(number of options);
 
     menu();
     dispopt(c);
-	
+
     temp = c;
     c = options(c,n);
 
@@ -206,6 +214,10 @@ Sleep(500);
 LCD.Clear(FEHLCD::Black);
 break;
     }
+	if (c==0)
+	{
+	diagnostics();
+	}
  return c;
 }
 
