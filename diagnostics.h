@@ -224,6 +224,10 @@ void SearchMain(int n)
     }
     else if (n==4)
     {
+        LCD.Write("Test Shaft Encoders");
+    }
+    else if (n==5)
+    {
         LCD.Write("Quit Testing");
     }
 }
@@ -882,6 +886,51 @@ void AnalogTest(int n)
     /* Wait until the middle button is released */
     while (buttons.MiddlePressed()) {}
 }
+void move_forward(int percent, int counts) //using encoders
+{
+    //Reset encoder counts
+    //right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+    right_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    right_motor.SetPercent(percent);
+    left_motor.SetPercent(percent);
+
+    //While the average of the left and right encoder are less than counts,
+    //keep running motors
+    while((left_encoder.Counts() +right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+int shaftencode(void)
+{
+    //ENCODER TESTING
+
+
+    right_encoder.SetThresholds(2.6,3);
+    left_encoder.SetThresholds(2.6,3);
+    move_forward(50,10);
+    Sleep(500);
+    LCD.Write("LE   ");
+    LCD.WriteLine(left_encoder.Counts());
+    LCD.Write("RE   ");
+    LCD.WriteLine(right_encoder.Counts());
+    move_forward(-50,20);
+    Sleep(500);
+    LCD.Write("LE   ");
+    LCD.WriteLine(left_encoder.Counts());
+    LCD.Write("RE   ");
+    LCD.WriteLine(right_encoder.Counts());
+    move_forward(50,30);
+    LCD.Write("LE   ");
+    LCD.WriteLine(left_encoder.Counts());
+    LCD.Write("RE   ");
+    LCD.WriteLine(right_encoder.Counts());
+}
 
 /* Begin diagnostics function to test Proteus */
 int diagnostics(void)
@@ -1105,7 +1154,15 @@ int diagnostics(void)
             }
         }
     }
-    else if (c1 == 4)
+    else if (c1==4)
+    {
+      // Shaft Encoder Testing
+      FEHEncoder right_encoder(FEHIO::P0_0);
+      FEHEncoder left_encoder(FEHIO::P0_4);
+      shaftencode();
+
+    }
+    else if (c1 == 5)
     {
         /* Quit testing program by leaving large while loop */
         q=1;
