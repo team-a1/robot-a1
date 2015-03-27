@@ -18,6 +18,7 @@
 #include "FEHMotor.h"
 #include "FEHServo.h"
 #include "diagnostics.h"
+#include "FEHBattery.h"
 
 // Team A1 splash screen
 // I have no life
@@ -67,7 +68,9 @@ void menu(void)
     LCD.WriteLine("Press the middle button");
     LCD.WriteLine("to select an option.");
     LCD.WriteLine(" ");
-    LCD.WriteLine(" ");
+    LCD.Write("Battery Voltage")
+    LCD.WriteLine(Battery.Voltage());
+    LCD.WriteLine(" ")
 }
 
 
