@@ -1,7 +1,7 @@
 Both files must be in Library folder of the firmware folder.
 
 Use uimenu.h to created a menu for choosing program.
-ui(n) creates the menu where n is the number of programs.
+ui(n) creates the menu where n is the number of programs including diagnostics.
 Diagnostics is program 0 and automatically included as long as diagnostics.h is included
 
 Example:
@@ -9,7 +9,7 @@ Example:
 main()
 {
 //
-//Menu of 2 programs
+//Menu of 3 programs- including diagnostics
 int c;
 c=ui(2);
 
