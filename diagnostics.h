@@ -9,6 +9,12 @@
 #include "FEHMotor.h"
 #include "FEHServo.h"
 
+// For shaft encoding
+FEHEncoder right_encoder(FEHIO::P0_0);
+FEHEncoder left_encoder(FEHIO::P0_4);
+FEHMotor right_motor(FEHMotor::Motor1);
+FEHMotor left_motor(FEHMotor::Motor0);
+
 /* Declare DC Motor ports */
 FEHMotor motor0 (FEHMotor::Motor0);
 FEHMotor motor1 (FEHMotor::Motor1);
@@ -1157,8 +1163,6 @@ int diagnostics(void)
     else if (c1==4)
     {
       // Shaft Encoder Testing
-      FEHEncoder right_encoder(FEHIO::P0_0);
-      FEHEncoder left_encoder(FEHIO::P0_4);
       shaftencode();
 
     }
