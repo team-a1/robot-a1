@@ -68,7 +68,7 @@ void menu(void)
     LCD.WriteLine("Press the middle button");
     LCD.WriteLine("to select an option.");
     LCD.WriteLine(" ");
-    LCD.Write("Battery Voltage");
+    LCD.Write("Battery Voltage ");
     LCD.WriteLine(Battery.Voltage());
     LCD.WriteLine(" ");
 }
