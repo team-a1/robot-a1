@@ -916,7 +916,7 @@ int shaftencode(void)
 {
     //ENCODER TESTING
 
-
+    LCD.Clear(FEHLCD::Black);
     right_encoder.SetThresholds(2.6,3);
     left_encoder.SetThresholds(2.6,3);
     move_forward(50,10);

@@ -175,6 +175,7 @@ void dispopt(int n)
 // 0 is diagnotiscs
 // 1 is program 1
 // Takes the number of options
+// n is number of programs including diagnostics
 
 int ui(int n) // c=ui(number of options);
 {
