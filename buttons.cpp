@@ -6,20 +6,20 @@
 #include <FEHMotor.h>
 #include <FEHRPS.h>
 
-int main(void)
+void PressButtons()
 {
     ButtonBoard buttons( FEHIO::Bank3 );
 
     LCD.Clear( FEHLCD::Black );
     LCD.SetFontColor( FEHLCD::White );
 
-    FEHServo servo(FEHServo::Servo2);
+    FEHServo servo2(FEHServo::Servo2);
     //now we are in front of the buttons
 
     int min=694,max=2350;
 
-    servo.SetMin(min);
-    servo.SetMax(max);
+    servo2.SetMin(min);
+    servo2.SetMax(max);
 
     RPS.InitializeMenu();
     Sleep(50);
@@ -39,7 +39,7 @@ int main(void)
 
                     if (red==a)
                     {
-                        servo.SetDegree(red_angle);
+                        servo2.SetDegree(red_angle);
                         Sleep(250);
 
                         while (RPS.RedButtonPressed()!=1)
@@ -56,7 +56,7 @@ int main(void)
 
                    else if (blue==a)
                     {
-                       servo.SetDegree(blue_angle);
+                       servo2.SetDegree(blue_angle);
                        Sleep(250);
 
 
@@ -73,7 +73,7 @@ int main(void)
 
                      else if(white==a)
                     {
-                        servo.SetDegree(white_angle);
+                        servo2.SetDegree(white_angle);
                         Sleep(250);
 
 
@@ -91,4 +91,9 @@ int main(void)
            }
 }
 
+int main(void)
+{
+  PressButtons();
 
+return 0;  
+}
