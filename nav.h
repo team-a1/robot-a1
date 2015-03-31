@@ -22,6 +22,7 @@ AnalogInputPin cds(FEHIO::P1_3);
 DigitalInputPin switch1(FEHIO::P1_5);
 DigitalInputPin switch2(FEHIO::P1_0);
 FEHServo servo(FEHServo::Servo0);
+FEHServo servo2(FEHServo::Servo2);
 
 //if you want to move relative to an amount of time
 void move_time(int Rpercent, int Lpercent, float sec)
@@ -117,6 +118,11 @@ void check_x_plus(float x_coordinate) //using RPS while robot is in the +x direc
             right_motor.SetPercent(30);
             left_motor.SetPercent(30);
         }
+        float time=TimeNow();
+        while(TimeNow()-time<.1);
+        right_motor.Stop();
+        left_motor.Stop();
+        Sleep(250);
     }
     right_motor.Stop();
     left_motor.Stop();
@@ -166,6 +172,26 @@ void check_y_plus(float y_coordinate) //using RPS while robot is in the +y direc
     left_motor.Stop();
 }
 
+void turn_left_time(int percent, float time)
+{
+    left_motor.SetPercent(-percent);
+    right_motor.SetPercent(percent);
+    float t = TimeNow();
+    while(TimeNow()-t<time);
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turn_right_time(int percent, float time)
+{
+    left_motor.SetPercent(percent);
+    right_motor.SetPercent(-percent);
+    float t = TimeNow();
+    while(TimeNow()-t<time);
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
 void check_heading(float heading) //using RPS
 {
     while(RPS.Heading() < heading - 2 || RPS.Heading() > heading + 2)
@@ -179,7 +205,7 @@ void check_heading(float heading) //using RPS
             if (RPS.Heading()-heading>180)
             {
                 //turn left 1 count
-                turn_left(40,1);
+                turn_left_time(40,.2);
                 //Slows down program to check for correct heading
                 Sleep(250);
             }
@@ -188,7 +214,7 @@ void check_heading(float heading) //using RPS
             else
             {
                 //turn right 1 count
-                turn_right(40,1);
+                turn_right_time(40,.2);
                 Sleep(250);
             }
         }
@@ -200,7 +226,7 @@ void check_heading(float heading) //using RPS
             if (heading-RPS.Heading()>180)
             {
                 //turn right 1 count
-                turn_right(40,1);
+                turn_right_time(40,.2);
                 Sleep(250);
             }
 
@@ -208,36 +234,15 @@ void check_heading(float heading) //using RPS
             else
             {
                 //turn left 1 count
-                turn_left(40,1);
+                turn_left_time(40,.2);
                 Sleep(250);
             }
         }
     }
 }
 
-//function when you want to turn relative to RPS location
-//takes desired new location coordinates as parameters
-//should turn robot so that it is facing this location
-float turnRPS(float xc, float yc)
+void SetHeading(float heading)
 {
-    //stores current location of robot
-    float x=RPS.X();
-    float y=RPS.Y();
-    //stores change in x and y
-    float dx=xc-x;
-    float dy=yc-y;
-    //calculates heading (Note: must be converted from radians to degrees)
-    float heading=atan(dy/dx)*(180/PI);
-    //accounts for 0 degrees being north instead of east
-    if (dx>0)
-    { //add 270 to rotate one quadrant CCW
-        heading+=270;
-    }
-    else
-    { //range of atan is only (-PI/2, PI/2), so if you want to be in
-        //quadrants 2 or 3 you add 180 then 270, or just add 90
-        heading+=90;
-    }
     //stores actual rotational distance you want to travel
     float dist;
     //counts to travel that distance
@@ -276,12 +281,43 @@ float turnRPS(float xc, float yc)
         else
         {
             dist=Rhead-heading;
+            LCD.WriteLine(dist);
             counts=dist*(11.0/90);
+            LCD.WriteLine(counts);
             turn_right(50,counts);
+            LCD.Write("LE  ");
+            LCD.WriteLine(left_encoder.Counts());
+            LCD.Write("RE  ");
+            LCD.WriteLine(right_encoder.Counts());
         }
     }
     //fine-tuning
     check_heading(heading);
+}
+
+//function when you want to turn relative to RPS location
+//takes desired new location coordinates as parameters
+//and returns the heading towards that location
+float turnRPS(float xc, float yc)
+{
+    //stores current location of robot
+    float x=RPS.X();
+    float y=RPS.Y();
+    //stores change in x and y
+    float dx=xc-x;
+    float dy=yc-y;
+    //calculates heading (Note: must be converted from radians to degrees)
+    float heading=atan(dy/dx)*(180/PI);
+    //accounts for 0 degrees being north instead of east
+    if (dx>0)
+    { //add 270 to rotate one quadrant CCW
+        heading+=270;
+    }
+    else
+    { //range of atan is only (-PI/2, PI/2), so if you want to be in
+        //quadrants 2 or 3 you add 180 then 270, or just add 90
+        heading+=90;
+    }
     return heading;
 }
 #endif
