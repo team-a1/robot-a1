@@ -250,16 +250,26 @@ void PumpSwitch()
 int main(void)
 {
 
+// ui menu
   int choice;
-  choice=ui(2);
+  choice=ui(4);
 
+// else-if structure for choice
+
+// Course run
   if (choice==1)
   {
         LCD.Clear();
 
+        // Initialize RPS
         RPS.InitializeMenu();
         LCD.WriteLine("Press Middle Button to Start");
-        while(!buttons.MiddlePressed());
+
+        while(!buttons.MiddlePressed())
+        {
+
+        }
+
         LCD.Clear();
         servo.SetMax(2284);
         servo.SetMin(533);
@@ -279,4 +289,71 @@ int main(void)
         PumpSwitch();
    } // end of ui if
 
+// Servo angle finder
+  else if (choice==2)
+  {
+   ButtonBoard buttons( FEHIO::Bank3 );
+
+   LCD.Clear( FEHLCD::Black );
+   LCD.SetFontColor( FEHLCD::White );
+   LCD.WriteLine("Servo Testing");
+
+
+   FEHServo servo(FEHServo::Servo2);
+
+   int min=694,max=2350;
+
+   servo.SetMin(min);
+   servo.SetMax(max);
+
+   int theta=0;`
+   servo.SetDegree(theta);
+
+// Allows control of servo via button board
+   while(true)
+   {
+     servo.SetDegree(theta);
+
+     if (buttons.RightPressed())
+     {
+     LCD.Clear( FEHLCD::Black );
+     theta++;
+     LCD.WriteLine(theta);
+     LCD.Write(" degrees");
+     Sleep(30);
+     }
+     else if (buttons.LeftPressed())
+     {
+     LCD.Clear( FEHLCD::Black );
+     theta--;
+     LCD.WriteLine(theta);
+     LCD.Write(" degrees");
+     Sleep(30);
+     }
+     else if (buttons.MiddlePressed())
+     {
+     theta=0;
+     LCD.WriteLine(theta);
+     LCD.Write(" degrees");
+     Sleep(30);
+
+     }
+   }
+ }
+
+// Servo calibration
+   else if (choice==3)
+   {
+     // Calibrates sevo
+       ButtonBoard buttons( FEHIO::Bank3 );
+       FEHServo servo(FEHServo::Servo2);
+       servo.Calibrate();
+
+       // Middle button exits
+       while(!buttons.MiddlePressed())
+       {
+
+       }
+   }
+   `
 } // end of main
