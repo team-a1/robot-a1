@@ -12,17 +12,27 @@
 
 #define PI 3.14159265
 
+#define LC 0 //state where left and center optosensors see the line
+#define L 1 //only left optosensor sees the line
+#define C 2 //only center optosensor sees the line
+#define RC 3 //right and center optosensors see line
+#define R 5 //only right optosensor sees line
+#define N 6 //none of the optosensors see the line
+
 //Declarations for encoders & motors
 ButtonBoard buttons(FEHIO::Bank3);
-FEHEncoder right_encoder(FEHIO::P0_0);
-FEHEncoder left_encoder(FEHIO::P0_4);
+FEHEncoder right_encoder(FEHIO::P1_6);
+FEHEncoder left_encoder(FEHIO::P0_0);
 FEHMotor right_motor(FEHMotor::Motor0);
 FEHMotor left_motor(FEHMotor::Motor1);
-AnalogInputPin cds(FEHIO::P1_3);
-DigitalInputPin switch1(FEHIO::P1_5);
+AnalogInputPin cds(FEHIO::P2_5);
+DigitalInputPin switch1(FEHIO::P1_3);
 DigitalInputPin switch2(FEHIO::P1_0);
 FEHServo servo(FEHServo::Servo0);
 FEHServo servo2(FEHServo::Servo2);
+AnalogInputPin C_Opt(FEHIO::P2_0);
+AnalogInputPin L_Opt(FEHIO::P0_5);
+AnalogInputPin R_Opt(FEHIO::P0_3);
 
 //if you want to move relative to an amount of time
 void move_time(int Rpercent, int Lpercent, float sec)
@@ -205,17 +215,17 @@ void check_heading(float heading) //using RPS
             if (RPS.Heading()-heading>180)
             {
                 //turn left 1 count
-                turn_left_time(40,.2);
+                turn_left_time(40,.15);
                 //Slows down program to check for correct heading
-                Sleep(250);
+                Sleep(100);
             }
 
             //otherwise you should turn right to get to target heading
             else
             {
                 //turn right 1 count
-                turn_right_time(40,.2);
-                Sleep(250);
+                turn_right_time(40,.15);
+                Sleep(100);
             }
         }
         //If RPS heading is less than target heading
@@ -226,16 +236,16 @@ void check_heading(float heading) //using RPS
             if (heading-RPS.Heading()>180)
             {
                 //turn right 1 count
-                turn_right_time(40,.2);
-                Sleep(250);
+                turn_right_time(40,.15);
+                Sleep(100);
             }
 
             //otherwise, turn left
             else
             {
                 //turn left 1 count
-                turn_left_time(40,.2);
-                Sleep(250);
+                turn_left_time(40,.15);
+                Sleep(100);
             }
         }
     }
@@ -281,18 +291,27 @@ void SetHeading(float heading)
         else
         {
             dist=Rhead-heading;
-            LCD.WriteLine(dist);
             counts=dist*(11.0/90);
-            LCD.WriteLine(counts);
             turn_right(50,counts);
-            LCD.Write("LE  ");
-            LCD.WriteLine(left_encoder.Counts());
-            LCD.Write("RE  ");
-            LCD.WriteLine(right_encoder.Counts());
         }
     }
     //fine-tuning
     check_heading(heading);
+}
+
+//adjusts heading relative to x coordinate
+void adjust_heading_x(float xc)
+{
+
+     if(RPS.X()<xc)
+     {
+         turn_right_time(50,.2);
+     }
+     else
+     {
+         turn_left_time(50,.2);
+     }
+     Sleep(100);
 }
 
 //function when you want to turn relative to RPS location
