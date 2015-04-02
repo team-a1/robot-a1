@@ -1,61 +1,28 @@
 // UI Menu library for testing
+// HIGH SPEED COMPETITION VERSION
 // Creates a UI menu with choices to select different functions
-// Includes diagnostics
-// Supports up to 9 programs
+// NO DIAGNOSTICS
+// Supports up to 10 programs
 // USE choice=ui() to create a ui fast.
 // Returns choice as an integer
-// 0 is diagnostics
+// 0 is first program
 // Vinh Peters
 
-#ifndef uimenu_H
-#define uimenu_H
+#ifndef compui_H
+#define compui_H
 
 #include "FEHLCD.h"
 #include "FEHUtility.h"
-#include "FEHBuzzer.h"
 #include "FEHLCD.h"
 #include "FEHIO.h"
-#include "FEHMotor.h"
-#include "FEHServo.h"
-#include "diagnostics.h"
 #include "FEHBattery.h"
 
-// Team A1 splash screen
-// I have no life
-void splash(void)
-{
-    LCD.Clear(FEHLCD::Black);
-    LCD.SetFontColor(FEHLCD::White);
-
-    LCD.WriteLine(" ");
-    LCD.WriteLine(" ");
-
-LCD.WriteLine(" ##### #####   #   #   #");
-LCD.WriteLine("   #   #      # #  ## ##");
-LCD.WriteLine("   #   ####  ##### # # #");
-LCD.WriteLine("   #   #     #   # #   #");
-LCD.WriteLine("   #   ##### #   # #   #");
-LCD.WriteLine("          #     #     ");
-LCD.WriteLine("         # #   ##     ");
-LCD.WriteLine("        #####   #     ");
-LCD.WriteLine("        #   #   #     ");
-LCD.WriteLine("        #   #  ###    ");
-
-// Time to see it in all its glory
-Sleep(300);
-//Quindar tone
-Buzzer.Tone(2525,250);
-Sleep(200);
-Buzzer.Tone(2475,250);
-Sleep(300);
-
-// All good things don't last forever
 LCD.Clear(FEHLCD::Black);
 LCD.SetFontColor(FEHLCD::White);
 }
 
 
-//Main menu function
+Main menu function
 // Creates menu with instructions and options
 
 void menu(void)
@@ -70,6 +37,7 @@ void menu(void)
     LCD.WriteLine(" ");
     LCD.Write("Battery Voltage ");
     LCD.WriteLine(Battery.Voltage());
+    LCD.Write(" ");
     LCD.WriteLine(" ");
 }
 
@@ -127,43 +95,43 @@ void dispopt(int n)
 
     if (n==0)
     {
-        LCD.Write("<Diagnostics>");
+        LCD.Write("<Program 1>");
     }
     else if (n==1)
     {
-        LCD.Write("<Program 1>");
+        LCD.Write("<Program 2>");
     }
     else if (n==2)
     {
-        LCD.Write("<Program 2>");
+        LCD.Write("<Program 3>");
     }
     else if (n==3)
     {
-        LCD.Write("<Program 3>");
+        LCD.Write("<Program 4>");
     }
     else if (n==4)
     {
-        LCD.Write("<Program 4>");
+        LCD.Write("<Program 5>");
     }
     else if (n==5)
     {
-        LCD.Write("<Program 5>");
+        LCD.Write("<Program 6>");
     }
     else if (n==6)
     {
-        LCD.Write("<Program 6>");
+        LCD.Write("<Program 7>");
     }
     else if (n==7)
     {
-        LCD.Write("<Program 7>");
+        LCD.Write("<Program 8>");
     }
     else if (n==8)
     {
-        LCD.Write("<Program 8>");
+        LCD.Write("<Program 9>");
     }
     else if (n==9)
     {
-        LCD.Write("<Program 9>");
+        LCD.Write("<Program 10>");
     }
 }
 
@@ -214,7 +182,7 @@ int ui(int n) // c=ui(number of options);
 
 LCD.WriteLine("");
 LCD.WriteLine("Running...");
-Sleep(500);
+Sleep(50
 LCD.Clear(FEHLCD::Black);
 break;
     }
