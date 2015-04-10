@@ -111,14 +111,14 @@ void check_x_plus(float x_coordinate) //using RPS while robot is in the +x direc
         //you have gone too far and must pulse backward
         if(RPS.X() > x_coordinate)
         {
-            right_motor.SetPercent(-30);
-            left_motor.SetPercent(-30);
+            right_motor.SetPercent(-40);
+            left_motor.SetPercent(-40);
         }
         //in this case you have not gone far enough and must pulse forward
         else if(RPS.X() < x_coordinate)
         {
-            right_motor.SetPercent(30);
-            left_motor.SetPercent(30);
+            right_motor.SetPercent(40);
+            left_motor.SetPercent(40);
         }
         float time=TimeNow();
         while(TimeNow()-time<.1);
@@ -373,7 +373,7 @@ void Ramp()
     LCD.WriteLine("Ramp");
     SetHeading(315);
     move_forward(60,20);
-    SetHeading(358);
+    SetHeading(0);
     LCD.WriteLine(RPS.Heading());
     if(RPS.Heading()>1)
     {
@@ -419,7 +419,7 @@ void FindCrank()
             left_motor.SetPercent(40);
         }
         while(C_Opt.Value()>1); //wait for yellow
-        while (RPS.Y()<58)
+        while (RPS.Y()<57.5)
         { // I will follow this line forever!
                 switch(state)
                 {
@@ -513,7 +513,9 @@ void TurnCrank2()
         LCD.WriteLine("RED");
         LCD.WriteLine(cds.Value());
 
-        for(int x=1;x<=3;x++)
+        int x=1;
+        float time=TimeNow();
+        while(x<=3&&TimeNow()-time<5)
         {
             //move out
             move_forward(-60,4);
@@ -521,7 +523,7 @@ void TurnCrank2()
 
             //adjust servo
             servo.SetDegree(36);
-            Sleep(400);
+            Sleep(500);
 
             servo.Off();
 
@@ -534,7 +536,8 @@ void TurnCrank2()
 
             //turn crank
             servo.SetDegree(180);
-            Sleep(400);
+            Sleep(500);
+            x++;
         }
     }
     else
@@ -544,18 +547,20 @@ void TurnCrank2()
         LCD.WriteLine(cds.Value());
 
         //first turn
-        servo.SetDegree(0);
-        Sleep(400);
+        servo.SetDegree(36);
+        Sleep(500);
 
-        for(int y=1;y<=2;y++)
+        int y=1;
+        float time=TimeNow();
+        while(y<=2&&TimeNow()-time<5)
         {
             //back up
             move_forward(-75,4);
             Sleep(200);
 
             //readjust servo
-            servo.SetDegree(144);
-            Sleep(400);
+            servo.SetDegree(180);
+            Sleep(500);
 
             servo.Off();
 
@@ -567,8 +572,9 @@ void TurnCrank2()
             servo.SetMin(533);
 
             //turn
-            servo.SetDegree(0);
-            Sleep(400);
+            servo.SetDegree(36);
+            Sleep(500);
+            y++;
         }
     }
 }
@@ -580,6 +586,10 @@ void DropSaltBag()
     move_forward(-60,5);
     servo.SetDegree(0);
     SetHeading(45);
+    if(RPS.Heading()>48)
+    {
+        SetHeading(45);
+    }
     move_forward(60,28);
     SetHeading(305);
     move_forward(-60,20);
@@ -603,6 +613,7 @@ void FindButtons()
     SetHeading(315);
     move_forward(60,16);
     SetHeading(225);
+    SetHeading(225);
     move_forward(60,3);
 }
 
@@ -625,11 +636,11 @@ void PressButtons()
         if (red==a)
         {
             servo2.SetDegree(red_angle);
-            Sleep(250);
+            Sleep(300);
             time=TimeNow();
             while (RPS.RedButtonPressed()!=1&&TimeNow()-time<2)
             {
-                move_time(-50,-50,.5);;
+                move_time(-60,-60,.3);;
                 Sleep(50);
             }
             if(RPS.RedButtonPressed()==1)
@@ -644,11 +655,11 @@ void PressButtons()
         else if (blue==a)
         {
             servo2.SetDegree(blue_angle);
-            Sleep(250);
+            Sleep(300);
             time=TimeNow();
             while (RPS.BlueButtonPressed()!=1&&TimeNow()-time<2)
             {
-                move_time(-50,-50,.5);
+                move_time(-60,-60,.3);
                 Sleep(50);
             }
             if(RPS.BlueButtonPressed()==1)
@@ -663,11 +674,11 @@ void PressButtons()
         else if(white==a)
         {
             servo2.SetDegree(white_angle);
-            Sleep(250);
+            Sleep(300);
             time=TimeNow();
             while (RPS.WhiteButtonPressed()!=1&&TimeNow()-time<2)
             {
-                move_time(-50,-50,.5);
+                move_time(-60,-60,.3);
                 Sleep(50);
             }
             if(RPS.WhiteButtonPressed()==1)
@@ -679,7 +690,7 @@ void PressButtons()
                 a=1;
             }
         }
-        move_time(50,50,.3);
+        move_time(70,70,.25);
     }
 }
 
@@ -691,16 +702,28 @@ void PumpSwitch()
     {
         SetHeading(310);
     }
-    servo2.SetDegree(90);
-    move_forward(-70,33);
+    servo2.SetDegree(110);
+    move_time(-70,-70,2.5);
     if(RPS.X()>12)
     {
         move_forward(-70,5);
     }
+    move_forward(60,5);
     SetHeading(5);
+    if(RPS.Heading()>8)
+    {
+        SetHeading(5);
+    }
     move_forward(-80,70);
     SetHeading(270);
-    move_forward(70,15);
+    if(RPS.X()<10)
+    {
+        move_forward(70,12);
+    }
+    else
+    {
+        move_forward(70,8);
+    }
     SetHeading(345);
     servo2.SetDegree(0);
     Sleep(500);
@@ -713,7 +736,7 @@ void PumpSwitch()
         while(RPS.OilPress()==0)
         {
             move_forward(60,10);
-            SetHeading(turnRPS(8.1,5.5)+180);
+            SetHeading(350);
             move_time(-75,-75,1);
         }
     }
@@ -725,7 +748,7 @@ void PumpSwitch()
         while(RPS.OilPress()==0)
         {
             servo2.SetDegree(90);
-            SetHeading(turnRPS(8.1,5.5)+180);
+            SetHeading(350);
             move_time(-50,-50,1.5);
             servo2.SetDegree(50);
             move_time(60,60,1);
