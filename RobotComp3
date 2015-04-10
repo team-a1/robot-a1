@@ -1,0 +1,775 @@
+#include <FEHLCD.h>
+#include <FEHIO.h>
+#include <FEHUtility.h>
+#include <FEHMotor.h>
+#include <FEHRPS.h>
+#include <FEHServo.h>
+#include <math.h>
+#include <time.h>
+
+
+#define PI 3.14159265
+
+ButtonBoard buttons(FEHIO::Bank3);
+
+FEHEncoder right_encoder(FEHIO::P1_6);
+FEHEncoder left_encoder(FEHIO::P0_0);
+FEHMotor right_motor(FEHMotor::Motor0);
+FEHMotor left_motor(FEHMotor::Motor1);
+
+AnalogInputPin cds(FEHIO::P2_5);
+
+DigitalInputPin switch1(FEHIO::P1_3);
+
+FEHServo servo(FEHServo::Servo0);
+FEHServo servo2(FEHServo::Servo2);
+AnalogInputPin C_Opt(FEHIO::P2_0);
+
+
+//if you want to move relative to an amount of time
+void move_time(int Rpercent, int Lpercent, float sec)
+{
+    right_motor.SetPercent(Rpercent);
+    left_motor.SetPercent(Lpercent);
+    //uses time library
+    float time = TimeNow();
+    while(TimeNow()-time<sec);
+    //stops after time has passed
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void move_forward(int percent, int counts) //using encoders
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    right_motor.SetPercent(percent);
+    left_motor.SetPercent(percent);
+
+    //While the average of the left and right encoder are less than counts,
+    //keep running motors
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turn_right(int percent, int counts) //using encoders
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    //To turn right, make left motor go forward while right goes backward
+
+    right_motor.SetPercent(-percent);
+    left_motor.SetPercent(percent);
+
+    //While the average of the left and right encoder are less than counts,
+    //keep running motors
+
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turn_left(int percent, int counts) //using encoders
+{
+    //Reset encoder counts
+    right_encoder.ResetCounts();
+    left_encoder.ResetCounts();
+
+    //Set both motors to desired percent
+    //To turn left, make right motor go forward while left goes backward
+
+    right_motor.SetPercent(percent);
+    left_motor.SetPercent(-percent);
+
+    //While the average of the left and right encoder are less than counts,
+    //keep running motors
+
+    while((left_encoder.Counts() + right_encoder.Counts()) / 2. < counts);
+
+    //Turn off motors
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void check_x_plus(float x_coordinate) //using RPS while robot is in the +x direction
+{
+    //check whether the robot is within an acceptable range
+    while(RPS.X() < x_coordinate - 2 || RPS.X() > x_coordinate + 2)
+    {
+        //If RPS coordinate is greater than the target coordinate,
+        //you have gone too far and must pulse backward
+        if(RPS.X() > x_coordinate)
+        {
+            right_motor.SetPercent(-30);
+            left_motor.SetPercent(-30);
+        }
+        //in this case you have not gone far enough and must pulse forward
+        else if(RPS.X() < x_coordinate)
+        {
+            right_motor.SetPercent(30);
+            left_motor.SetPercent(30);
+        }
+        float time=TimeNow();
+        while(TimeNow()-time<.1);
+        right_motor.Stop();
+        left_motor.Stop();
+        Sleep(250);
+    }
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void check_y_minus(float y_coordinate) //using RPS while robot is in the -y direction
+{
+    //check whether the robot is within an acceptable range
+    while(RPS.Y() < y_coordinate - 2 || RPS.Y() > y_coordinate + 2)
+    {
+        //You have not gone far enough, must pulse forward
+        if(RPS.Y() > y_coordinate)
+        {
+            right_motor.SetPercent(30);
+            left_motor.SetPercent(30);
+        }
+        //You have gone too far, must pulse backward
+        else if(RPS.Y() < y_coordinate)
+        {
+            right_motor.SetPercent(-30);
+            left_motor.SetPercent(-30);
+        }
+    }
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void check_y_plus(float y_coordinate) //using RPS while robot is in the +y direction
+{
+    //check whether the robot is within an acceptable range
+    while(RPS.Y() < y_coordinate - 2 || RPS.Y() > y_coordinate + 2)
+    {
+        //You have gone too far, must pulse backward
+        if(RPS.Y() > y_coordinate)
+        {
+            right_motor.SetPercent(-40);
+            left_motor.SetPercent(-40);
+        }
+        //You have not gone far enough, must pulse forward
+        else if(RPS.Y() < y_coordinate)
+        {
+            right_motor.SetPercent(40);
+            left_motor.SetPercent(40);
+        }
+    }
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turn_left_time(int percent, float time)
+{
+    left_motor.SetPercent(-percent);
+    right_motor.SetPercent(percent);
+    float t = TimeNow();
+    while(TimeNow()-t<time);
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void turn_right_time(int percent, float time)
+{
+    left_motor.SetPercent(percent);
+    right_motor.SetPercent(-percent);
+    float t = TimeNow();
+    while(TimeNow()-t<time);
+    right_motor.Stop();
+    left_motor.Stop();
+}
+
+void check_heading(float heading) //using RPS
+{
+    while(RPS.Heading() < heading - 2 || RPS.Heading() > heading + 2)
+    {
+        //If RPS heading is greater than target heading
+        if(RPS.Heading() > heading)
+        {
+            // Ex. at 357 and trying to get to 0, turn left
+            //If the difference is greater than 180, then the robot
+            //should be turning left to get to target heading
+            if (RPS.Heading()-heading>180)
+            {
+                //turn left 1 count
+                turn_left_time(40,.1);
+                //Slows down program to check for correct heading
+                Sleep(100);
+            }
+
+            //otherwise you should turn right to get to target heading
+            else
+            {
+                //turn right 1 count
+                turn_right_time(40,.1);
+                Sleep(100);
+            }
+        }
+        //If RPS heading is less than target heading
+        else if(RPS.Heading() < heading)
+        {
+            // Ex. At 0 and trying to get to 357, turn right
+            //if difference is greater than 180, turn right
+            if (heading-RPS.Heading()>180)
+            {
+                //turn right 1 count
+                turn_right_time(40,.1);
+                Sleep(100);
+            }
+
+            //otherwise, turn left
+            else
+            {
+                //turn left 1 count
+                turn_left_time(40,.1);
+                Sleep(100);
+            }
+        }
+    }
+}
+
+void SetHeading(float heading)
+{
+    LCD.Write("Heading: ");
+    LCD.WriteLine(heading);
+    LCD.Write("RPS heading before: ");
+    LCD.WriteLine(RPS.Heading());
+    //stores actual rotational distance you want to travel
+    float dist;
+    //counts to travel that distance
+    int counts;
+    //Stores current RPS heading
+    //(RPS heading fluctuates so it's easier to store it in a variable at the beginning)
+    float Rhead=RPS.Heading();
+    if (heading-Rhead>0)
+    {
+        //it would be faster to turn right
+        if (heading-Rhead>180)
+        {
+            dist=(360-heading)+Rhead;
+            //calculates counts based on the ratio of 11 counts per 90 degrees
+            counts=dist*(11.0/90);
+            turn_right(70,counts);
+        }
+        //it would be faster to turn left
+        else
+        {
+            dist=heading-Rhead;
+            counts=dist*(11.0/90);
+            turn_left(70,counts);
+        }
+    }
+    else
+    {
+        //it would be faster to turn left
+        if(Rhead-heading>180)
+        {
+            dist=(360-Rhead)+heading;
+            counts=dist*(11.0/90);
+            turn_left(70,counts);
+        }
+        //it would be faster to turn right
+        else
+        {
+            dist=Rhead-heading;
+            counts=dist*(11.0/90);
+            turn_right(70,counts);
+        }
+    }
+    //fine-tuning
+    check_heading(heading);
+    LCD.Write("RPS heading after: ");
+    LCD.WriteLine(RPS.Heading());
+}
+
+//adjusts heading relative to x coordinate
+void adjust_heading_x(float xc)
+{
+
+     if(RPS.X()<xc)
+     {
+         turn_right_time(50,.2);
+     }
+     else
+     {
+         turn_left_time(50,.2);
+     }
+     Sleep(100);
+}
+
+//function when you want to turn relative to RPS location
+//takes desired new location coordinates as parameters
+//and returns the heading towards that location
+float turnRPS(float xc, float yc)
+{
+    //stores current location of robot
+    float x=RPS.X()-4;
+    float y=RPS.Y();
+    //stores change in x and y
+    float dx=xc-x;
+    float dy=yc-y;
+    //calculates heading (Note: must be converted from radians to degrees)
+    float heading=atan(dy/dx)*(180/PI);
+    //accounts for 0 degrees being north instead of east
+    if (dx>0)
+    { //add 270 to rotate one quadrant CCW
+        heading+=270;
+    }
+    else
+    { //range of atan is only (-PI/2, PI/2), so if you want to be in
+        //quadrants 2 or 3 you add 180 then 270, or just add 90
+        heading+=90;
+    }
+    return heading;
+}
+
+void GrabSaltBag()
+{
+    LCD.WriteLine("Grab Salt Bag");
+    move_forward(-60,14);
+    SetHeading(45);
+
+    if(RPS.Heading()<42)
+    {
+        SetHeading(47);
+    }
+    else if(RPS.Heading()>47)
+    {
+        SetHeading(44);
+    }
+
+    servo2.SetDegree(0);
+
+    Sleep(500);
+
+    servo2.SetDegree(48);
+    move_time(-70,-70,.75);
+    if(RPS.Heading()<42)
+    {
+        check_heading(45);
+    }
+    move_time(-70,-70,.75);
+    servo2.SetDegree(0);
+    move_forward(70,10);
+}
+
+void Ramp()
+{
+    LCD.WriteLine("Ramp");
+    SetHeading(315);
+    move_forward(60,20);
+    SetHeading(358);
+    LCD.WriteLine(RPS.Heading());
+    if(RPS.Heading()>1)
+    {
+        SetHeading(358);
+    }
+
+    //Going up ramp
+    servo2.SetDegree(14);
+    Sleep(100);
+    move_forward(75,45);
+
+    while(RPS.Y()<35)
+    {
+        check_heading(356);
+        move_forward(80,30);
+    }
+
+    // At the top
+    servo2.SetDegree(0);
+}
+
+void FindCrank()
+{
+    LCD.WriteLine("Turn Crank");
+
+    //LINE FOLLOWING
+
+        int state = 1; // Set the initial state
+
+        //start moving, once you find the line, line following process starts
+
+        right_motor.SetPercent(40);
+        left_motor.SetPercent(40);
+
+        //1 optosensor
+
+        while(C_Opt.Value()<1); //wait for black
+        if(RPS.Heading()>10)
+        {
+            move_forward(50,2);
+            check_heading(0);
+            right_motor.SetPercent(40);
+            left_motor.SetPercent(40);
+        }
+        while(C_Opt.Value()>1); //wait for yellow
+        while (RPS.Y()<58)
+        { // I will follow this line forever!
+                switch(state)
+                {
+                    // If the line is on my right...
+                    case 1:
+                        // off line
+                        right_motor.SetPercent(50);
+                        left_motor.SetPercent(0);
+                        if (C_Opt.Value()<1)
+                        {
+                            state = 2; // update a new state
+                        }
+                            break;
+                     // on line
+                    case 2:
+                        left_motor.SetPercent(50);
+                        right_motor.SetPercent(0);
+                        if(C_Opt.Value()>1)
+                        {
+                            state = 1; // update a new state
+                        }
+                        break;
+                    default: // Error. Something is very wrong.
+                        break;
+                }
+        }
+}// end of function
+
+void TurnCrank2()
+{
+    int dir=0;
+    LCD.WriteLine("Turn Crank");
+    if(RPS.X()>30)
+    {
+        check_heading(15);
+    }
+    else
+    {
+        check_heading(0);
+    }
+
+    FindCrank();
+    check_heading(0);
+    servo.Off();
+    move_time(50,50,.5);
+    Sleep(500);
+
+        float time=TimeNow();
+        //error trapping if you are off target
+        while(switch1.Value()==1&&TimeNow()-time<10)
+        {
+            move_forward(-50,4);
+
+            adjust_heading_x(30);
+            Sleep(100);
+            move_forward(50,1);
+            Sleep(100);
+            check_heading(0);
+
+            move_time(50,50,.5);
+            LCD.WriteLine(cds.Value());
+            if(cds.Value()<.5)
+            {
+                dir=1;
+            }
+            else if(cds.Value()<1)
+            {
+                dir=2;
+            }
+            Sleep(200);
+        }
+        move_time(50,50,.5);
+
+        if(dir!=1&&dir!=2)
+        {
+            LCD.WriteLine(cds.Value());
+            if(cds.Value()<.5)
+            {
+                dir=1;
+            }
+            else
+            {
+                dir=2;
+            }
+        }
+        servo.SetMax(2284);
+        servo.SetMin(533);
+    if(dir==1)
+    {
+        //CW - Red
+        LCD.WriteLine("RED");
+        LCD.WriteLine(cds.Value());
+
+        for(int x=1;x<=3;x++)
+        {
+            //move out
+            move_forward(-60,4);
+            Sleep(200);
+
+            //adjust servo
+            servo.SetDegree(36);
+            Sleep(400);
+
+            servo.Off();
+
+            //move back in
+            move_forward(75,5);
+            Sleep(200);
+
+            servo.SetMax(2284);
+            servo.SetMin(533);
+
+            //turn crank
+            servo.SetDegree(180);
+            Sleep(400);
+        }
+    }
+    else
+    {
+        //CCW - Blue
+        LCD.WriteLine("BLUE");
+        LCD.WriteLine(cds.Value());
+
+        //first turn
+        servo.SetDegree(0);
+        Sleep(400);
+
+        for(int y=1;y<=2;y++)
+        {
+            //back up
+            move_forward(-75,4);
+            Sleep(200);
+
+            //readjust servo
+            servo.SetDegree(144);
+            Sleep(400);
+
+            servo.Off();
+
+            //move in
+            move_forward(75,5);
+            Sleep(200);
+
+            servo.SetMax(2284);
+            servo.SetMin(533);
+
+            //turn
+            servo.SetDegree(0);
+            Sleep(400);
+        }
+    }
+}
+
+void DropSaltBag()
+{
+    //Navigate around snow pile
+    LCD.WriteLine("Drop Salt Bag");
+    move_forward(-60,5);
+    servo.SetDegree(0);
+    SetHeading(45);
+    move_forward(60,28);
+    SetHeading(305);
+    move_forward(-60,20);
+
+    //Drop bag
+    SetHeading(225);
+    move_forward(-60,5);
+    servo2.SetDegree(90);
+
+    //Push into garage
+    move_forward(60,15);
+    servo2.SetDegree(0);
+    move_forward(-60,15);
+}
+
+void FindButtons()
+{
+    // Go to buttons
+    LCD.WriteLine("Find Buttons");
+    move_forward(60,5);
+    SetHeading(315);
+    move_forward(60,16);
+    SetHeading(225);
+    move_forward(60,3);
+}
+
+void PressButtons()
+{
+
+    LCD.WriteLine("Press Buttons");
+    int red = RPS.RedButtonOrder();
+    int blue = RPS.BlueButtonOrder();
+    int white = RPS.WhiteButtonOrder();
+    int red_angle = 80;
+    int blue_angle = 49;
+    int white_angle = 65;
+    int a=1;
+    float time;
+
+    while (RPS.BlueButtonPressed()!=1 || RPS.RedButtonPressed()!=1 || RPS.WhiteButtonPressed()!=1)
+    {
+    LCD.WriteLine(a);
+        if (red==a)
+        {
+            servo2.SetDegree(red_angle);
+            Sleep(250);
+            time=TimeNow();
+            while (RPS.RedButtonPressed()!=1&&TimeNow()-time<2)
+            {
+                move_time(-50,-50,.5);;
+                Sleep(50);
+            }
+            if(RPS.RedButtonPressed()==1)
+            {
+                a++;
+            }
+            else if (RPS.BlueButtonPressed()==0&&RPS.RedButtonPressed()==0&&RPS.WhiteButtonPressed()==0)
+            {
+                a=1;
+            }
+        }
+        else if (blue==a)
+        {
+            servo2.SetDegree(blue_angle);
+            Sleep(250);
+            time=TimeNow();
+            while (RPS.BlueButtonPressed()!=1&&TimeNow()-time<2)
+            {
+                move_time(-50,-50,.5);
+                Sleep(50);
+            }
+            if(RPS.BlueButtonPressed()==1)
+            {
+                a++;
+            }
+            else if (RPS.BlueButtonPressed()==0&&RPS.RedButtonPressed()==0&&RPS.WhiteButtonPressed()==0)
+            {
+                a=1;
+            }
+        }
+        else if(white==a)
+        {
+            servo2.SetDegree(white_angle);
+            Sleep(250);
+            time=TimeNow();
+            while (RPS.WhiteButtonPressed()!=1&&TimeNow()-time<2)
+            {
+                move_time(-50,-50,.5);
+                Sleep(50);
+            }
+            if(RPS.WhiteButtonPressed()==1)
+            {
+                a++;
+            }
+            else if (RPS.BlueButtonPressed()==0&&RPS.RedButtonPressed()==0&&RPS.WhiteButtonPressed()==0)
+            {
+                a=1;
+            }
+        }
+        move_time(50,50,.3);
+    }
+}
+
+void PumpSwitch()
+{
+    LCD.WriteLine("Pump Switch");
+    SetHeading(310);
+    if(RPS.Heading()>312)
+    {
+        SetHeading(310);
+    }
+    servo2.SetDegree(90);
+    move_forward(-70,33);
+    if(RPS.X()>12)
+    {
+        move_forward(-70,5);
+    }
+    SetHeading(5);
+    move_forward(-80,70);
+    SetHeading(270);
+    move_forward(70,15);
+    SetHeading(345);
+    servo2.SetDegree(0);
+    Sleep(500);
+    servo2.SetDegree(90);
+    int oil=RPS.OilDirec();
+    if(oil==1)
+    {
+        servo2.SetDegree(70);
+        move_time(-60,-60,1);
+        while(RPS.OilPress()==0)
+        {
+            move_forward(60,10);
+            SetHeading(turnRPS(8.1,5.5)+180);
+            move_time(-75,-75,1);
+        }
+    }
+    else
+    {
+        move_time(-60,-60,1);
+        servo2.SetDegree(50);
+        move_time(60,60,2);
+        while(RPS.OilPress()==0)
+        {
+            servo2.SetDegree(90);
+            SetHeading(turnRPS(8.1,5.5)+180);
+            move_time(-50,-50,1.5);
+            servo2.SetDegree(50);
+            move_time(60,60,1);
+        }
+    }
+}
+
+int main(void)
+{
+
+// Course run
+     LCD.Clear();
+
+        // Initialize RPS
+        RPS.InitializeMenu();
+        LCD.WriteLine("Press Middle Button to Start");
+
+        while(!buttons.MiddlePressed())
+        {
+
+        }
+        LCD.WriteLine(cds.Value());
+
+        LCD.Clear();
+        servo.SetMax(2284);
+        servo.SetMin(533);
+        servo.SetDegree(180);
+        servo2.SetMin(562);
+        servo2.SetMax(2243);
+        right_encoder.SetThresholds(.5,1.5);
+        left_encoder.SetThresholds(.5,1.5);
+
+        float time=TimeNow();
+        while(cds.Value()>.5&&TimeNow()-time<30)
+        {
+
+        }
+
+
+        GrabSaltBag();
+        Ramp();
+        TurnCrank2();
+        DropSaltBag();
+        FindButtons();
+        PressButtons();
+        PumpSwitch();
+}
